@@ -1,0 +1,2 @@
+# Gambit
+Cortex Syslog Generator
