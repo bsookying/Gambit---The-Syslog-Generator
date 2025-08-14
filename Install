@@ -17,32 +17,34 @@ Clone the repository to your server:
 
 Bash
 
-git clone https://github.com/your-username/cortex-syslog-generator.git
-cd cortex-syslog-generator
-Create the Python file: Create a file named app.py in the project directory.
+git clone https://github.com/bsookying/gambit.git
+cd Gambit
+Create the Python file: Create a file named gambit.py in the project directory.
 
 Bash
 
-nano app.py
-Add the code: Copy the entire code from this project's repository and paste it into the app.py file. Save and exit the file.
+nano gambit.py
+Add the code: Copy the entire code from this project's repository and paste it into the gambit.py file. Save and exit the file.
 
 Usage
 Run the application:
 
 Bash
 
-python3 app.py
+python3 gambit.py
 The application will start, and you will see a message indicating it is running on all addresses on port 5000.
 
-Access the web UI: Open a web browser and navigate to http://[SERVER_IP_ADDRESS]:5000. If you encounter a connection error, ensure your server's firewall is not blocking port 5000.
+Access the web UI: Open a web browser and navigate to http://localhost:5000. If you encounter a connection error, ensure your server's firewall is not blocking port 5000.
 
 Configure and Generate:
 
-Enter the IP address of your Cortex Broker.
+Enter the IP address of your syslog receiver (whatever it maybe).
 
-Select a Log Format and one or more Log Sources.
+Select a Log Format and one or more Log Sources. 
 
 Choose between Randomization and Story mode. For Story mode, you can also enable Add Noise to increase realism.
 
 Click Start to begin sending logs.
+
+** Not intended to be a load generator**
 
