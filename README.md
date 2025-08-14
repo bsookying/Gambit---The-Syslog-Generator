@@ -1,7 +1,7 @@
 # Gambit
 
 **Custom Syslog Generator**
-Gambit is a Syslog Generator is a Python-based web application designed to simulate and send realistic syslog events to a SIEM platform. It is a powerful tool for security professionals to test detection rules, validate log ingestion, and train analysts in a controlled environment.
+Gambit is a Syslog Generator Python-based web application designed to simulate and send realistic syslog events to a SIEM platform. It is a powerful tool for security professionals to test detection rules, validate and log ingestion. 
 
 **Features**
 Flexible Log Generation: Sends logs from five different sources (http, ftp, router, switch, firewall) in popular formats including RFC3164, RFC5424, CEF, and LEEF.
