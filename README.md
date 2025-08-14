@@ -15,14 +15,19 @@ Gambit is an AI coded syslog generator designed to simulate and send realistic s
   - Web Server Breach
   
   - Brute-Force & Data Theft
+    
 
 Noise Injection: Adds random background logs to Story Mode, making it more challenging and realistic to simulate real-world traffic.
+
 
 **Real-time Log Display**: A live console in the web interface shows the logs as they are being sent.
 
 
 
+
+
 ** I have no intentions to do any more development on this tool - share your modifications! **
+Take this code and make it yours! Please share your interations
 
 
 Developed by Ben Sookying
