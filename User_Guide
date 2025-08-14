@@ -1,0 +1,43 @@
+Gambit: A Detailed Feature Overview
+Gambit is a powerful Python-based tool designed to generate and send custom syslog events. 
+It is ideal for security professionals who need to test their SIEM platforms, validate parsing and correlation rules, and train security analysts in a controlled and realistic environment.
+
+Gambit is built as a single-file Python Flask application, making it lightweight and easy to deploy on a variety of platforms, including Ubuntu servers. The web UI is interactive, using JavaScript to control the generation process and a real-time log display that shows messages as they are sent.
+
+Log Generation Capabilities
+Log Formats: Gambit is built to support a range of industry-standard log formats, allowing you to test how your SIEM handles different data structures. The tool specifically supports CEF and LEEF but can be modified to send others. 
+
+Log Sources: To create a diverse and realistic set of logs, Gambit can generate events from five distinct simulated sources:
+
+HTTP: Simulates web server access and activity
+FTP: Generates logs for file transfer actions, such as logins and file retrieval.
+Router: Creates logs for network configuration changes.
+Switch: Logs events related to network interface status changes.
+Firewall: Simulates inbound and outbound connection events.
+
+YOu can probably have AI add other types. Just be specific about how the traffic to match the receiver/listener.
+
+Sending and Session Controls
+Gambit offers two primary modes for sending logs, each with unique control options:
+
+  Randomization Mode: 
+  Purpose: Creates a continuous stream of random logs from selected sources.
+    Session Duration: The user can specify the session duration in minutes.
+    Message Rate: Logs are sent at a user-defined rate of messages per second, providing fine-grained control over the volume of traffic.
+
+Use Case: Perfect for load testing your SIEM and establishing a baseline of normal, background network traffic. NOTE - This was not intended to be a load generator but it would be interesting to see! Please contribute your testing efforts.
+
+Story Mode:
+Purpose: Simulates a specific, pre-defined security incident by sending a fixed sequence of events.
+
+Session Duration: The user can specify a session duration in minutes. All logs for the story, including noise, are sent randomly throughout this time.
+
+Narratives: There are three pre-built security narratives available:
+  Rogue Insider: Simulates an internal threat.
+  Web Server Breach: Simulates a web server compromise and lateral movement.
+  Brute-Force & Data Theft: Simulates an external attack to steal data.
+
+Noise Injection: When "Add Noise" is enabled, a default of 83 random background logs are mixed into the story events, creating a total of 100 logs. This makes it more challenging to spot the core attack and is ideal for analyst training.
+
+Customize Log Vendor Type and Product Name 
+
