@@ -1,5 +1,6 @@
 Getting Started
 Prerequisites
+Tested in Ubuntu 20.04
 This tool requires Python 3 and a few libraries. You can install them with pip.
 
 Bash
