@@ -20,3 +20,7 @@ Noise Injection: Adds random background logs to Story Mode, making it more chall
 Real-time Log Display: A live console in the web interface shows the logs as they are being sent.
 
 ** I have no intentions to do any more development on this tool - share your modifications! **
+
+Developed by Ben Sookying
+Assisted by Mike "the code mechanic" Vasquez
+Documentation master Xavier "Professor X" Lumabao
