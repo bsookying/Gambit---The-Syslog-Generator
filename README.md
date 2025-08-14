@@ -1,4 +1,4 @@
-# Gambit - The AI-coded Syslog Generator
+# The AI-coded Syslog Generator
 
 Gambit is an AI coded syslog generator designed to simulate and send realistic syslog events to a SIEM platform.  It is a powerful tool for security professionals to test detection rules, validate and log ingestion. 
 
@@ -17,9 +17,12 @@ Customizable, Flexible Log Generation: Sends logs from five different sources (h
 
 Noise Injection: Adds random background logs to Story Mode, making it more challenging and realistic to simulate real-world traffic.
 
-Real-time Log Display: A live console in the web interface shows the logs as they are being sent.
+**Real-time Log Display**: A live console in the web interface shows the logs as they are being sent.
+
+
 
 ** I have no intentions to do any more development on this tool - share your modifications! **
+
 
 Developed by Ben Sookying
 Assisted by Mike "the code mechanic" Vasquez
