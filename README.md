@@ -31,5 +31,7 @@ Take this code and make it yours! Please share your interations
 
 
 Developed by Ben Sookying
+
 Assisted by Mike "the code mechanic" Vasquez
+
 Documentation master Xavier "Professor X" Lumabao
