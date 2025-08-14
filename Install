@@ -1,31 +1,38 @@
 Getting Started
+
 Prerequisites
-Tested in Ubuntu 20.04
+Tested in Ubuntu 20.04, should be supported in any flavor.
 This tool requires Python 3 and a few libraries. You can install them with pip.
 
 Bash
 
+(optional)
 # Update package list
 sudo apt-get update
 
+(optional)
 # Install python3 and pip
 sudo apt-get install python3 python3-pip -y
 
 # Install project dependencies
 pip3 install Flask Faker
-Installation
-Clone the repository to your server:
+Copy the repository to your server:
 
 Bash
+Create a directory on your linux host. Doesnt matter what you call it but for now, use Gambit.
+Change directory to the folder and open a terminal window. 
 
+Clone the rep:
 git clone https://github.com/bsookying/gambit.git
-cd Gambit
-Create the Python file: Create a file named gambit.py in the project directory.
+
+Create the Python application file: Create a file named gambit.py in the project directory.
 
 Bash
 
 nano gambit.py
 Add the code: Copy the entire code from this project's repository and paste it into the gambit.py file. Save and exit the file.
+Control+O will prompt you to save the file.
+Control+X to exit out of the nano editor.
 
 Usage
 Run the application:
@@ -36,16 +43,6 @@ python3 gambit.py
 The application will start, and you will see a message indicating it is running on all addresses on port 5000.
 
 Access the web UI: Open a web browser and navigate to http://localhost:5000. If you encounter a connection error, ensure your server's firewall is not blocking port 5000.
-
-Configure and Generate:
-
-Enter the IP address of your syslog receiver (whatever it maybe).
-
-Select a Log Format and one or more Log Sources. 
-
-Choose between Randomization and Story mode. For Story mode, you can also enable Add Noise to increase realism.
-
-Click Start to begin sending logs.
 
 ** Not intended to be a load generator**
 
