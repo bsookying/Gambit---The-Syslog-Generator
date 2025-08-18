@@ -34,7 +34,7 @@ HTML = '''
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>Gambit</title>
+  <title>Gambit the Syslog Generator</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     body {
@@ -116,7 +116,7 @@ HTML = '''
 </head>
 <body class="p-4">
   <div class="container text-center">
-    <img src="https://storage.googleapis.com/gcs-p-gemini-generative-content/v5/gambit.jpg" alt="Gambit" class="img-fluid mb-4" style="max-width: 250px;">
+   
     <h1>Gambit</h1>
     <p class="fs-5">The Syslog Generator</p>
     <br>
@@ -591,7 +591,7 @@ def generate_logs_session(config):
                 story_steps = [
                     {'source': 'http', 'count': 10, 'log_func': lambda: gen_web_breach_log()}, # 10 failed/suspicious HTTP requests
                     {'source': 'ftp', 'count': 1, 'log_func': gen_ftp}, # Successful FTP login
-                    {'source': 'http', 'count': 1, 'log_func': lambda: gen_web_breach_log()}, # Successful web request
+                    {'source': 'http', 'count': 1, 'log_func': lambda: {'msg': '"POST /login HTTP/1.1" 200 1024', 'src_ip': fake.ipv4_public(), 'dst_ip': '-'}}, # Successful web request
                 ]
                 for step in story_steps:
                     for _ in range(step.get('count', 1)):
@@ -670,7 +670,7 @@ def start_session():
         
         config = request.json
         if not config.get('log_format'):
-              return jsonify({'success': False, 'message': 'No log format selected.'})
+            return jsonify({'success': False, 'message': 'No log format selected.'})
         
         if config.get('send_mode') == 'random':
             if not config.get('sources'):
@@ -742,7 +742,7 @@ def stream_logs():
                 if len(session_state['logs_queue']) > last_index:
                     for i in range(last_index, len(session_state['logs_queue'])):
                         log = session_state['logs_queue'][i]
-                        log = log.replace('"', '\\"') 
+                        log = log.replace('"', '\\"')
                         yield f'data: {{"log": "{log}"}}\n\n'
                     last_index = len(session_state['logs_queue'])
     
@@ -750,5 +750,6 @@ def stream_logs():
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True, threaded=True)
+
 
 
