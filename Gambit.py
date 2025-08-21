@@ -133,6 +133,44 @@ HTML = '''
     h5[data-bs-toggle="collapse"] {
         cursor: pointer;
     }
+    .accordion-button {
+        background-color: #3e3e3e;
+        color: #e0e0e0;
+    }
+    .accordion-button:not(.collapsed) {
+        background-color: #4caf50;
+        color: white;
+    }
+    .accordion-body {
+        background-color: #2c2c2c;
+    }
+    #selected-products-container {
+        margin-top: 1rem;
+    }
+    .product-tag {
+        display: inline-block;
+        background-color: #4caf50;
+        color: white;
+        padding: .25rem .5rem;
+        border-radius: .25rem;
+        margin-right: .5rem;
+        margin-bottom: .5rem;
+        font-size: 0.8rem;
+    }
+    .product-tag .remove-tag {
+        cursor: pointer;
+        margin-left: .5rem;
+        font-weight: bold;
+    }
+    footer {
+        text-align: center;
+        margin-top: 2rem;
+        color: #888;
+        font-size: 0.8rem;
+    }
+    footer a {
+        color: #4caf50;
+    }
   </style>
 </head>
 <body class="p-4">
@@ -152,42 +190,25 @@ HTML = '''
               <input type="text" class="form-control" id="dest_ip" name="dest_ip" required placeholder="127.0.0.1" value="">
               <small class="form-text text-muted">Enter Syslog Receiver IP</small>
             </div>
-            <div class="row" id="log-format-sources-row">
-              <div class="col-md-6">
-                <div class="mb-3">
+            <div id="log-format-sources-row">
+                <div class="mb-3" style="display: none;">
                   <label for="log_format" class="form-label">Log Format</label>
-                  <select class="form-select" id="log_format" name="log_format" required>
-                    <option value="" disabled selected>Select a format</option>
-                    <option value="cef">CEF</option>
-                    <option value="leef">LEEF</option>
+                  <select class="form-select" id="log_format" name="log_format">
+                    <option value="cef" selected>CEF</option>
                   </select>
                 </div>
-              </div>
-              <div class="col-md-6">
-                <div class="mb-3">
-                  <label class="form-label">Log Sources</label><br>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="sources" id="src_http" value="http">
-                    <label class="form-check-label" for="src_http">Http</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="sources" id="src_ftp" value="ftp">
-                    <label class="form-check-label" for="src_ftp">Ftp</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="sources" id="src_router" value="router">
-                    <label class="form-check-label" for="src_router">Router</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="sources" id="src_switch" value="switch">
-                    <label class="form-check-label" for="src_switch">Switch</label>
-                  </div>
-                  <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" name="sources" id="src_firewall" value="firewall">
-                    <label class="form-check-label" for="src_firewall">Firewall</label>
-                  </div>
+                <div id="standard-log-sources">
+                    <div class="mb-3">
+                        <label class="form-label">Log Sources</label>
+                        <div class="accordion" id="vendorAccordion" style="height: 200px; overflow-y: auto;">
+                            <!-- Accordion items will be injected here by JavaScript -->
+                        </div>
+                    </div>
+                    <div id="selected-products-container">
+                        <label class="form-label">Selected Products</label>
+                        <div id="selected-products" style="min-height: 50px; background-color: #3e3e3e; border-radius: .25rem; padding: .5rem;"></div>
+                    </div>
                 </div>
-              </div>
             </div>
           </div>
         </div>
@@ -207,20 +228,57 @@ HTML = '''
             <div class="random-controls">
                 <div class="mb-3" id="random-settings">
                     <label for="duration_minutes" class="form-label">Session Duration (minutes)</label>
-                    <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" required value="">
+                    <input type="number" class="form-control" id="duration_minutes" name="duration_minutes" required value="1">
                 </div>
                 <div class="mb-3">
                     <label for="messages_per_second" class="form-label">Messages per Second</label>
-                    <input type="number" class="form-control" id="messages_per_second" name="messages_per_second" required value="">
+                    <input type="number" class="form-control" id="messages_per_second" name="messages_per_second" required value="10">
+                </div>
+                <hr>
+                <div class="form-check form-switch mb-3">
+                  <input class="form-check-input" type="checkbox" id="custom_log_toggle" name="custom_log_toggle">
+                  <label class="form-check-label" for="custom_log_toggle">Create Custom Log</label>
+                </div>
+                <div id="custom-log-fields" style="display: none;">
+                    <div class="mb-3">
+                        <label for="custom_vendor" class="form-label">Custom Vendor</label>
+                        <input type="text" class="form-control" id="custom_vendor" name="custom_vendor">
+                    </div>
+                    <div class="mb-3">
+                        <label for="custom_product" class="form-label">Custom Product</label>
+                        <input type="text" class="form-control" id="custom_product" name="custom_product">
+                        <small class="form-text text-muted">Try keywords like: NGFW, EDR, Proxy, VPN</small>
+                    </div>
                 </div>
             </div>
             <div class="story-controls">
                 <div class="mb-3">
                     <label for="story_type" class="form-label">Select a Story</label>
                     <select class="form-select" id="story_type" name="story_type">
-                        <option value="rogue_insider_story">Rogue Insider Story</option>
-                        <option value="web_server_breach_story">Web Server Breach Story</option>
-                        <option value="brute_force_data_theft_story">Brute-Force & Data Theft Story</option>
+                        <optgroup label="Attack Scenarios">
+                            <option value="rogue_insider_story">Rogue Insider Story</option>
+                            <option value="web_server_breach_story">Web Server Breach Story</option>
+                            <option value="brute_force_data_theft_story">Brute-Force & Data Theft Story</option>
+                            <option value="aws_compromise_story">AWS Compromise Story</option>
+                            <option value="gcp_compromise_story">GCP Compromise Story</option>
+                            <option value="azure_compromise_story">Azure Compromise Story</option>
+                        </optgroup>
+                        <optgroup label="MITRE ATT&CK Tactics">
+                            <option value="reconnaissance_story">Reconnaissance (TA0043)</option>
+                            <option value="resource_development_story">Resource Development (TA0042)</option>
+                            <option value="initial_access_story">Initial Access (TA0001)</option>
+                            <option value="execution_story">Execution (TA0002)</option>
+                            <option value="persistence_story">Persistence (TA0003)</option>
+                            <option value="privilege_escalation_story">Privilege Escalation (TA0004)</option>
+                            <option value="defense_evasion_story">Defense Evasion (TA0005)</option>
+                            <option value="credential_access_story">Credential Access (TA0006)</option>
+                            <option value="discovery_story">Discovery (TA0007)</option>
+                            <option value="lateral_movement_story">Lateral Movement (TA0008)</option>
+                            <option value="collection_story">Collection (TA0009)</option>
+                            <option value="command_and_control_story">Command and Control (TA0011)</option>
+                            <option value="exfiltration_story">Exfiltration (TA0010)</option>
+                            <option value="impact_story">Impact (TA0040)</option>
+                        </optgroup>
                     </select>
                 </div>
                 <div class="form-check mb-3">
@@ -240,60 +298,23 @@ HTML = '''
           </div>
         </div>
       </div>
-      <div class="row">
-        <div class="col-md-12">
-          <div class="mb-4 p-3 border rounded">
-            <h5 class="mb-3">
-              <a data-bs-toggle="collapse" href="#customize-collapse" role="button" aria-expanded="false" aria-controls="customize-collapse" style="text-decoration: none; color: inherit;">
-                Customize Logs
-                <span class="ms-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
-                      <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
-                  </svg>
-                </span>
-              </a>
-            </h5>
-            <div class="collapse" id="customize-collapse">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                          <label for="vendor" class="form-label">Vendor</label>
-                          <input type="text" class="form-control" id="vendor" name="vendor" value="Gambit">
-                          <small class="form-text text-muted">Gambit (default)</small>
-                        </div>
-                        <div class="mb-3">
-                          <label for="product_name" class="form-label">Product Name</label>
-                          <input type="text" class="form-control" id="product_name" name="product_name" value="">
-                          <small class="form-text text-muted">Auto-generated by log source (e.g., GambitHTTP)</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="custom_username" class="form-label">Custom Username</label>
-                            <input type="text" class="form-control" id="custom_username" name="custom_username" value="">
-                            <small class="form-text text-muted">Override the random user for randomization mode.</small>
-                        </div>
-                        <div class="mb-3">
-                            <label for="custom_department" class="form-label">Custom Department</label>
-                            <input type="text" class="form-control" id="custom_department" name="custom_department" value="">
-                            <small class="form-text text-muted">Override the random department.</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </form>
     <div id="status-alert" class="alert mt-3 d-none"></div>
     <div class="mt-4">
         <div class="d-flex justify-content-between align-items-center mb-2">
             <h3>Live Log Display</h3>
-            <button type="button" class="btn btn-info btn-sm" id="clear-btn">Clear Logs</button>
+            <div>
+                <button type="button" class="btn btn-secondary btn-sm" id="new-session-btn">New Session</button>
+                <button type="button" class="btn btn-info btn-sm" id="clear-btn">Clear Logs</button>
+            </div>
         </div>
         <div id="log_display"></div>
     </div>
   </div>
+  
+  <footer>
+      <p>Gambit was developed by Ben Sookying, created for security practioners. This is not intended for commercial use. Make sure to visit the github repo for the latest version of the code. <a href="https://github.com/bsookying/Gambit-The-Syslog-Generator" target="_blank">https://github.com/bsookying/Gambit-The-Syslog-Generator</a></p>
+  </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -302,14 +323,38 @@ HTML = '''
     const pauseBtn = document.getElementById('pause-btn');
     const stopBtn = document.getElementById('stop-btn');
     const clearBtn = document.getElementById('clear-btn');
+    const newSessionBtn = document.getElementById('new-session-btn');
     const statusAlert = document.getElementById('status-alert');
     const logDisplay = document.getElementById('log_display');
     const storyModeRadio = document.getElementById('mode_story');
     const randomModeRadio = document.getElementById('mode_random');
     const storyControls = document.querySelector('.story-controls');
     const randomControls = document.querySelector('.random-controls');
-    const logFormatSelect = document.getElementById('log_format');
-    const logFormatSourcesRow = document.getElementById('log-format-sources-row');
+    const standardLogSources = document.getElementById('standard-log-sources');
+    const customLogToggle = document.getElementById('custom_log_toggle');
+    const customLogFields = document.getElementById('custom-log-fields');
+
+    const productsByVendor = {
+        "AWS": ["CloudTrail", "VPC Flow Logs"],
+        "Azure": ["Audit Logs", "Flow Logs", "Signin Log", "AD Audit Logs"],
+        "GCP": ["Audit Logs", "Flow Logs"],
+        "Kubernetes": ["Audit Logs"],
+        "Okta": ["SSO", "Audit"],
+        "Duo": ["Authentication"],
+        "PingOne": ["SSO"],
+        "OneLogin": ["Events"],
+        "Google Workspace": ["Audit", "Authentication"],
+        "Microsoft 365": ["Email Logs"],
+        "Palo Alto Networks": ["PAN-OS", "Global Protect", "Platform Logs", "URL Logs"],
+        "Cisco": ["ASA"],
+        "Zscaler": ["Web Proxy"],
+        "Proofpoint": ["Email Security"],
+        "Microsoft": ["Defender for Endpoint"],
+        "CrowdStrike": ["Falcon"],
+        "SentinelOne": ["EDR"],
+        "Dropbox": ["Events"],
+        "Windows": ["Event Collector"]
+    };
 
     let eventSource = null;
 
@@ -342,7 +387,7 @@ HTML = '''
             if (data.status) {
               showStatus(data.status, data.type);
               setButtonsState(data.is_running, data.is_paused);
-              if (data.status.includes("completed") || data.status.includes("stopped")) {
+              if (data.status.includes("completed") || data.status.includes("stopped") || data.status.includes("not yet implemented")) {
                   if(eventSource) eventSource.close();
               }
             } else if (data.log) {
@@ -364,36 +409,105 @@ HTML = '''
     }
 
     function updateUIMode(sendMode) {
-      if (sendMode === 'story') {
-        storyControls.style.display = 'block';
-        randomControls.style.display = 'none';
-        logFormatSourcesRow.style.display = 'none';
-      } else {
-        storyControls.style.display = 'none';
-        randomControls.style.display = 'block';
-        logFormatSourcesRow.style.display = 'flex'; // Or 'block' depending on layout
-      }
+        if (sendMode === 'story') {
+            storyControls.style.display = 'block';
+            randomControls.style.display = 'none';
+            standardLogSources.style.display = 'none';
+        } else { // 'random' mode
+            storyControls.style.display = 'none';
+            randomControls.style.display = 'block';
+            const isCustom = customLogToggle.checked;
+            customLogFields.style.display = isCustom ? 'block' : 'none';
+            standardLogSources.style.display = isCustom ? 'none' : 'block';
+        }
     }
     
+    function updateSelectedProductsDisplay() {
+        const selectedProductsContainer = document.getElementById('selected-products');
+        selectedProductsContainer.innerHTML = '';
+        const selectedCheckboxes = document.querySelectorAll('input[name="products"]:checked');
+        selectedCheckboxes.forEach(cb => {
+            const [vendor, product] = cb.value.split('-');
+            const tag = document.createElement('span');
+            tag.className = 'product-tag';
+            tag.textContent = `${product} (${vendor})`;
+            const removeSpan = document.createElement('span');
+            removeSpan.className = 'remove-tag';
+            removeSpan.textContent = 'x';
+            removeSpan.onclick = () => {
+                cb.checked = false;
+                updateSelectedProductsDisplay();
+            };
+            tag.appendChild(removeSpan);
+            selectedProductsContainer.appendChild(tag);
+        });
+    }
+
+    function populateVendors() {
+        const vendorAccordion = document.getElementById('vendorAccordion');
+        Object.keys(productsByVendor).forEach((vendor, index) => {
+            const vendorId = `vendor_${vendor.replace(/ /g, '_')}`;
+            const collapseId = `collapse_${vendorId}`;
+            
+            const accordionItem = document.createElement('div');
+            accordionItem.className = 'accordion-item';
+
+            let productCheckboxesHTML = '';
+            const products = productsByVendor[vendor] || [];
+            products.forEach(product => {
+                const productIdentifier = `${vendor}-${product}`;
+                productCheckboxesHTML += `
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="products" value="${productIdentifier}" id="prod_${productIdentifier.replace(/ /g, '_')}">
+                        <label class="form-check-label" for="prod_${productIdentifier.replace(/ /g, '_')}">${product}</label>
+                    </div>
+                `;
+            });
+
+            accordionItem.innerHTML = `
+                <h2 class="accordion-header" id="heading_${vendorId}">
+                  <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#${collapseId}" aria-expanded="false" aria-controls="${collapseId}">
+                    ${vendor}
+                  </button>
+                </h2>
+                <div id="${collapseId}" class="accordion-collapse collapse" aria-labelledby="heading_${vendorId}" data-bs-parent="#vendorAccordion">
+                  <div class="accordion-body">
+                    ${productCheckboxesHTML}
+                  </div>
+                </div>
+            `;
+            vendorAccordion.appendChild(accordionItem);
+        });
+        vendorAccordion.addEventListener('change', updateSelectedProductsDisplay);
+    }
+
+    customLogToggle.addEventListener('change', () => {
+        const isCustom = customLogToggle.checked;
+        customLogFields.style.display = isCustom ? 'block' : 'none';
+        standardLogSources.style.display = isCustom ? 'none' : 'block';
+    });
+
     randomModeRadio.addEventListener('change', (e) => updateUIMode(e.target.value));
     storyModeRadio.addEventListener('change', (e) => updateUIMode(e.target.value));
     
     startBtn.addEventListener('click', () => {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
-        data.sources = formData.getAll('sources');
         
-        if (data.send_mode === 'random' && data.sources.length === 0) {
-            showStatus('Please select at least one log source for Randomization mode.', 'danger');
-            return;
-        }
-        
-        if (data.send_mode !== 'story' && !logFormatSelect.value) {
-            showStatus('Please select a log format.', 'danger');
-            return;
+        if (data.custom_log_toggle) {
+            if (!data.custom_vendor || !data.custom_product) {
+                showStatus('Please provide both a custom vendor and product.', 'danger');
+                return;
+            }
+        } else if (data.send_mode === 'random') {
+            data.products = Array.from(document.querySelectorAll('input[name="products"]:checked')).map(cb => cb.value);
+            if (data.products.length === 0) {
+                showStatus('Please select at least one product for random mode.', 'danger');
+                return;
+            }
         }
 
-        data.dest_port = 514; // Default port
+        data.dest_port = 514;
         
         fetch('/start', {
             method: 'POST',
@@ -433,7 +547,16 @@ HTML = '''
         showStatus('Log display cleared.', 'info');
     });
 
+    newSessionBtn.addEventListener('click', () => {
+        logDisplay.innerHTML = '';
+        form.reset();
+        updateSelectedProductsDisplay();
+        updateUIMode('random');
+        showStatus('New session started.', 'info');
+    });
+
     // Initial state check and UI update
+    populateVendors();
     fetch('/status').then(response => response.json()).then(status => {
       setButtonsState(status.is_running, status.is_paused);
       if (status.is_running) {
@@ -449,240 +572,461 @@ HTML = '''
 '''
 
 # --- BACKEND LOGIC ---
-SOURCES = ["http", "ftp", "router", "switch", "firewall"]
-
 def format_log_line(vendor, product, severity, event_id, message_dict, fmt='cef'):
     """Formats a log message into a CEF or LEEF string."""
     now = datetime.now()
-    
-    # Common fields for CSV
     log_data = {
-        'timestamp': now.isoformat(),
-        'vendor': vendor,
-        'product': product,
-        'severity': severity,
-        'event_id': event_id,
-        'name': message_dict.get('name', 'N/A'),
-        'username': message_dict.get('username', 'N/A'),
-        'department': message_dict.get('department', 'N/A'),
-        'src_ip': message_dict.get('src_ip', 'N/A'),
-        'dst_ip': message_dict.get('dst_ip', 'N/A'),
-        'request': message_dict.get('request', 'N/A'),
-        'status': message_dict.get('status', 'N/A'),
-        'action': message_dict.get('action', 'N/A'),
-        'message': message_dict.get('message', 'N/A'),
-        'filename': message_dict.get('filename', 'N/A'),
+        'timestamp': now.isoformat(), 'vendor': vendor, 'product': product, 'severity': severity,
+        'event_id': event_id, 'name': message_dict.get('name', 'N/A'),
+        'username': message_dict.get('username', 'N/A'), 'src_ip': message_dict.get('src_ip', 'N/A'),
+        'dst_ip': message_dict.get('dst_ip', 'N/A'), 'message': message_dict.get('message', 'N/A')
     }
-
-    if fmt == 'cef':
-        header = f'{now.strftime("%b %d %H:%M:%S")} {HOSTNAME} CEF:0|{vendor}|{product}|1.0|{event_id}|{message_dict["name"]}|{severity}|'
-        
-        custom_fields = []
-        if message_dict.get('username'): custom_fields.append(f'suser={message_dict["username"]}')
-        if message_dict.get('department'): custom_fields.append(f'dept={message_dict["department"]}')
-        if message_dict.get('src_ip'): custom_fields.append(f'src={message_dict["src_ip"]}')
-        if message_dict.get('dst_ip'): custom_fields.append(f'dst={message_dict["dst_ip"]}')
-        if message_dict.get('request'): custom_fields.append(f'request={message_dict["request"]}')
-        if message_dict.get('status'): custom_fields.append(f'outcome={message_dict["status"]}')
-        if message_dict.get('action'): custom_fields.append(f'act={message_dict["action"]}')
-        if message_dict.get('message'): custom_fields.append(f'msg={message_dict["message"]}')
-        if message_dict.get('filename'): custom_fields.append(f'fname={message_dict["filename"]}')
-        
-        log_line = header + " ".join(custom_fields)
-    elif fmt == 'leef':
-        header = f'LEEF:1.0|{vendor}|{product}|1.0|{event_id}|'
-        
-        custom_fields = []
-        if message_dict.get('username'): custom_fields.append(f'usrName={message_dict["username"]}')
-        if message_dict.get('department'): custom_fields.append(f'dept={message_dict["department"]}')
-        if message_dict.get('src_ip'): custom_fields.append(f'src={message_dict["src_ip"]}')
-        if message_dict.get('dst_ip'): custom_fields.append(f'dst={message_dict["dst_ip"]}')
-        if message_dict.get('request'): custom_fields.append(f'request={message_dict["request"]}')
-        if message_dict.get('status'): custom_fields.append(f'outcome={message_dict["status"]}')
-        if message_dict.get('action'): custom_fields.append(f'act={message_dict["action"]}')
-        if message_dict.get('message'): custom_fields.append(f'msg={message_dict["message"]}')
-        if message_dict.get('filename'): custom_fields.append(f'fname={message_dict["filename"]}')
-        
-        log_line = header + "\t".join(custom_fields)
-
-    log_data['log_line'] = log_line
+    header = f'{now.strftime("%b %d %H:%M:%S")} {HOSTNAME} CEF:0|{vendor}|{product}|1.0|{event_id}|{message_dict.get("name", "N/A")}|{severity}|'
+    fields = [f'suser={message_dict.get("username", "")}', f'src={message_dict.get("src_ip", "")}', f'dst={message_dict.get("dst_ip", "")}', f'msg={message_dict.get("message", "")}']
+    log_data['log_line'] = header + " ".join(filter(None, fields))
     return log_data
 
-def gen_user_info(custom_username=None, custom_department=None):
-    if custom_username:
-        return {'username': custom_username, 'department': custom_department if custom_department else "N/A"}
+def gen_user_info():
     return {'username': fake.user_name(), 'department': random.choice(DEPARTMENTS)}
 
-def gen_http(custom_username=None, custom_department=None, user_info=None, path=None, status=None, is_bad=False, src_ip=None, fmt='cef', vendor_name=DEFAULT_VENDOR, product_name=None):
-    user = user_info if user_info else gen_user_info(custom_username, custom_department)
-    src_ip = src_ip if src_ip else fake.ipv4_public()
-    dst_ip = "10.1.2.30"
-    
-    if is_bad:
-        path = KNOWN_BAD_URLS[0]
-        dst_ip = KNOWN_BAD_IPS[0]
-        message = "User visited known malicious URL"
-        status = 200
-        severity = 9
+# --- Custom Log Generator ---
+def gen_custom_log(fmt='cef', **kwargs):
+    vendor = kwargs.get('custom_vendor', 'CustomVendor')
+    product = kwargs.get('custom_product', 'CustomProduct')
+    product_lower = product.lower()
+
+    message_dict = {
+        'username': fake.user_name(),
+        'src_ip': fake.ipv4_public(),
+        'dst_ip': fake.ipv4_private(),
+    }
+
+    # Context-aware log generation based on keywords
+    if any(kw in product_lower for kw in ['ngfw', 'firewall', 'fw']):
+        message_dict['name'] = random.choice(['Connection Allowed', 'Connection Denied', 'Threat Detected'])
+        message_dict['message'] = f"Firewall event: {message_dict['name']} from {message_dict['src_ip']} to {message_dict['dst_ip']}"
+    elif 'edr' in product_lower:
+        message_dict['name'] = random.choice(['Suspicious Process Detected', 'Malware Quarantined', 'Ransomware Behavior Blocked'])
+        message_dict['message'] = f"EDR alert: {message_dict['name']} on host {fake.hostname()}"
+    elif 'proxy' in product_lower:
+        message_dict['name'] = random.choice(['URL Blocked', 'URL Allowed', 'Content Category Filtered'])
+        message_dict['message'] = f"Proxy event: {message_dict['name']} for user {message_dict['username']}"
+    elif 'vpn' in product_lower:
+        message_dict['name'] = random.choice(['VPN Connection Success', 'VPN Connection Failed'])
+        message_dict['message'] = f"VPN event: {message_dict['name']} for user {message_dict['username']} from {message_dict['src_ip']}"
     else:
-        path = path if path else random.choice(["/index.html", "/images/logo.png", "/about-us", "/contact", "/api/data"])
-        status = status if status else random.choice([200, 404, 500])
-        message = "User is browsing internal web server" if status == 200 else "Suspicious request"
-        severity = 3 if status == 200 else 6
+        # Fallback to generic message
+        message_dict['name'] = 'Custom Event'
+        message_dict['message'] = f'This is a custom log event for {product}.'
 
-    message_dict = {
-        'name': 'Web Activity', 'username': user['username'], 'department': user['department'],
-        'src_ip': src_ip, 'dst_ip': dst_ip, 'request': f'GET {path}', 'status': status, 'message': message
-    }
-    return format_log_line(vendor_name, product_name or "HTTP", severity, 100, message_dict, fmt)
+    return format_log_line(vendor, product, 5, 99999, message_dict, fmt)
 
-def gen_ftp(custom_username=None, custom_department=None, user_info=None, action=None, filename=None, is_exfil=False, src_ip=None, fmt='cef', vendor_name=DEFAULT_VENDOR, product_name=None, status='success'):
-    user = user_info if user_info else gen_user_info(custom_username, custom_department)
-    src_ip = src_ip if src_ip else fake.ipv4_private()
-    action = action if action else random.choice(["DOWNLOAD", "UPLOAD", "LIST", "LOGIN"])
-    filename = filename if filename else random.choice(["document.pdf", "image.jpg", "report.xlsx"])
+
+# --- Vendor Specific Log Generators ---
+def gen_aws_cloudtrail_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'ConsoleLogin', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'Successful AWS Console login'}
+    message_dict.update(kwargs)
+    return format_log_line("AWS", "CloudTrail", 3, 20000, message_dict, fmt)
+
+def gen_aws_vpc_flow_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'VPC Flow', 'src_ip': fake.ipv4_public(), 'dst_ip': fake.ipv4_private(), 'message': 'AWS VPC network flow event'}
+    message_dict.update(kwargs)
+    return format_log_line("AWS", "VPC Flow Logs", 2, 20001, message_dict, fmt)
+
+def gen_azure_audit_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Update User', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'Azure AD user updated'}
+    message_dict.update(kwargs)
+    return format_log_line("Azure", "Audit Logs", 4, 9000, message_dict, fmt)
+
+def gen_azure_flow_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Network Flow', 'src_ip': fake.ipv4_public(), 'dst_ip': fake.ipv4_private(), 'message': 'Azure network flow event'}
+    message_dict.update(kwargs)
+    return format_log_line("Azure", "Flow Logs", 2, 9001, message_dict, fmt)
+
+def gen_azure_signin_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'UserLoggedIn', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'Successful user sign-in'}
+    message_dict.update(kwargs)
+    return format_log_line("Azure", "Signin Log", 3, 9002, message_dict, fmt)
+
+def gen_azure_ad_audit_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Add member to group', 'username': fake.user_name(), 'message': 'User added to security group'}
+    message_dict.update(kwargs)
+    return format_log_line("Azure", "AD Audit Logs", 6, 9003, message_dict, fmt)
+
+def gen_gcp_audit_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'v1.compute.instances.insert', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'GCP VM instance created'}
+    message_dict.update(kwargs)
+    return format_log_line("GCP", "Audit Logs", 5, 10000, message_dict, fmt)
+
+def gen_gcp_flow_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'VPC Flow', 'src_ip': fake.ipv4_public(), 'dst_ip': fake.ipv4_private(), 'message': 'GCP network flow event'}
+    message_dict.update(kwargs)
+    return format_log_line("GCP", "Flow Logs", 2, 10001, message_dict, fmt)
+
+def gen_kubernetes_audit_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'create-pod', 'username': 'system:kube-scheduler', 'src_ip': fake.ipv4_private(), 'message': 'Pod created in default namespace'}
+    message_dict.update(kwargs)
+    return format_log_line("Kubernetes", "Audit Logs", 4, 11000, message_dict, fmt)
+
+def gen_okta_sso_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'user.session.start', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'Okta SSO event'}
+    message_dict.update(kwargs)
+    return format_log_line("Okta", "SSO", 3, 3000, message_dict, fmt)
+
+def gen_okta_audit_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'user.privilege.grant', 'username': fake.user_name(), 'message': 'User granted admin privileges'}
+    message_dict.update(kwargs)
+    return format_log_line("Okta", "Audit", 8, 3001, message_dict, fmt)
+
+def gen_duo_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'authentication.success', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'Duo authentication successful'}
+    message_dict.update(kwargs)
+    return format_log_line("Duo", "Authentication", 2, 12000, message_dict, fmt)
+
+def gen_pingone_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'sso.success', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'PingOne SSO successful'}
+    message_dict.update(kwargs)
+    return format_log_line("PingOne", "SSO", 2, 13000, message_dict, fmt)
+
+def gen_onelogin_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'login.success', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'OneLogin event'}
+    message_dict.update(kwargs)
+    return format_log_line("OneLogin", "Events", 2, 14000, message_dict, fmt)
+
+def gen_google_workspace_audit_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'drive.view', 'username': fake.user_name(), 'message': 'User viewed a file in Google Drive'}
+    message_dict.update(kwargs)
+    return format_log_line("Google Workspace", "Audit", 3, 15000, message_dict, fmt)
+
+def gen_google_workspace_auth_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'login.success', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'Google Workspace login successful'}
+    message_dict.update(kwargs)
+    return format_log_line("Google Workspace", "Authentication", 2, 15001, message_dict, fmt)
+
+def gen_m365_email_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'email.sent', 'username': fake.user_name(), 'message': 'Email sent from user mailbox'}
+    message_dict.update(kwargs)
+    return format_log_line("Microsoft 365", "Email Logs", 2, 16000, message_dict, fmt)
+
+def gen_panos_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'TRAFFIC', 'src_ip': fake.ipv4_public(), 'dst_ip': fake.ipv4_private(), 'message': 'Traffic log'}
+    message_dict.update(kwargs)
+    return format_log_line("Palo Alto Networks", "PAN-OS", 2, 1000, message_dict, fmt)
+
+def gen_cisco_asa_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Connection Denied', 'src_ip': fake.ipv4_public(), 'dst_ip': fake.ipv4_private(), 'message': 'Teardown TCP connection'}
+    message_dict.update(kwargs)
+    return format_log_line("Cisco", "ASA", 5, 106023, message_dict, fmt)
+
+def gen_zscaler_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Blocked Malicious URL', 'username': fake.user_name(), 'src_ip': fake.ipv4_private(), 'dst_ip': random.choice(KNOWN_BAD_IPS), 'message': 'URL blocked due to security policy'}
+    message_dict.update(kwargs)
+    return format_log_line("Zscaler", "Web Proxy", 8, 4000, message_dict, fmt)
+
+def gen_proofpoint_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Malicious URL Clicked', 'username': fake.user_name(), 'src_ip': fake.ipv4_private(), 'message': 'User clicked a malicious link in an email'}
+    message_dict.update(kwargs)
+    return format_log_line("Proofpoint", "Email Security", 9, 5000, message_dict, fmt)
+
+def gen_mde_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'LSASS Memory Access', 'username': fake.user_name(), 'src_ip': fake.ipv4_private(), 'message': 'Suspicious process accessed LSASS memory'}
+    message_dict.update(kwargs)
+    return format_log_line("Microsoft", "Defender for Endpoint", 10, 6000, message_dict, fmt)
+
+def gen_crowdstrike_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Process Spawning from Office App', 'username': fake.user_name(), 'src_ip': fake.ipv4_private(), 'message': 'winword.exe spawned powershell.exe'}
+    message_dict.update(kwargs)
+    return format_log_line("CrowdStrike", "Falcon", 8, 7000, message_dict, fmt)
+
+def gen_sentinelone_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Ransomware Behavior Detected', 'username': fake.user_name(), 'src_ip': fake.ipv4_private(), 'message': 'A process is rapidly encrypting files'}
+    message_dict.update(kwargs)
+    return format_log_line("SentinelOne", "EDR", 10, 8000, message_dict, fmt)
+
+def gen_dropbox_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'file.download', 'username': fake.user_name(), 'src_ip': fake.ipv4_public(), 'message': 'User downloaded a file from Dropbox'}
+    message_dict.update(kwargs)
+    return format_log_line("Dropbox", "Events", 3, 17000, message_dict, fmt)
+
+def gen_windows_event_collector_log(fmt='cef', **kwargs):
+    message_dict = {'name': 'Forwarded Event', 'username': fake.user_name(), 'src_ip': fake.ipv4_private(), 'message': 'An event was forwarded by the collector'}
+    message_dict.update(kwargs)
+    return format_log_line("Windows", "Event Collector", 2, 18000, message_dict, fmt)
+
+# --- Story Generators ---
+
+def send_log(log_function, sock, csv_writer, dest_ip, dest_port, fmt='cef', **kwargs):
+    """Helper function to generate, send, and queue a single log."""
+    if session_state['stop_event'].is_set(): return
+    log_dict = log_function(fmt=fmt, **kwargs)
+    log_line = log_dict['log_line']
+    try:
+        socket.inet_aton(dest_ip)
+        resolved_ip = dest_ip
+    except socket.error:
+        try:
+            resolved_ip = socket.gethostbyname(dest_ip)
+        except socket.gaierror:
+            raise ConnectionError(f"Could not resolve hostname: {dest_ip}")
+
+    sock.sendto(log_line.encode('utf-8'), (resolved_ip, dest_port))
+    if csv_writer: csv_writer.writerow(log_dict)
+    with session_lock:
+        session_state['logs_queue'].append(f'data: {json.dumps({"log": log_line})}\n\n')
+    # Use a shorter, more controlled sleep for noise generation
+    if kwargs.get('is_noise'):
+        time.sleep(random.uniform(0.1, 0.5))
+    else:
+        time.sleep(random.uniform(0.5, 2.0))
+
+def rogue_insider_story(config, sock, csv_writer):
+    """Generates logs for a rogue insider scenario."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
     
-    message = "File exfiltration detected" if is_exfil else "FTP transfer completed"
-    severity = 9 if is_exfil else 3
-    if status == 'fail':
-        message = "FTP login failed"
-        severity = 5
+    insider_username = fake.user_name()
+    insider_ip = fake.ipv4_private()
+
+    send_log(gen_okta_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=insider_username, 
+             message=f'User {insider_username} added to "Domain Admins" group')
+
+    sensitive_files = ["Q4_Financial_Forecast.xlsx", "Project_Phoenix_Roadmap.pdf", "employee_salary_data_2025.csv"]
+    for fname in sensitive_files:
+        send_log(gen_dropbox_log, sock, csv_writer, dest_ip, dest_port,
+                 username=insider_username, 
+                 src_ip=insider_ip,
+                 message=f'User {insider_username} downloaded file "{fname}"')
+
+    send_log(gen_proofpoint_log, sock, csv_writer, dest_ip, dest_port,
+             username=insider_username,
+             src_ip=insider_ip,
+             message=f'Outbound email to personal address with large attachment detected from {insider_username}')
     
-    message_dict = {
-        'name': 'FTP Transfer', 'username': user['username'], 'department': user['department'],
-        'src_ip': src_ip, 'action': action, 'filename': filename, 'message': message
-    }
-    return format_log_line(vendor_name, product_name or "FTP", severity, 200, message_dict, fmt)
+    send_log(gen_google_workspace_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=insider_username,
+             name='drive.delete',
+             message=f'User {insider_username} deleted an item from Google Drive audit log')
 
-def gen_event_log(custom_username=None, custom_department=None, user_info=None, event_type=None, message=None, severity=None, src_ip=None, fmt='cef', vendor_name=DEFAULT_VENDOR, product_name=None):
-    user = user_info if user_info else gen_user_info(custom_username, custom_department)
-    src_ip = src_ip if src_ip else fake.ipv4_private()
-    event_type = event_type if event_type else "USER_EVENT"
-    message = message if message else 'System event.'
-    severity = severity if severity else 4
-
-    message_dict = {
-        'name': 'System Event', 'username': user['username'], 'department': user['department'],
-        'event_type': event_type, 'message': message, 'src_ip': src_ip
-    }
-    return format_log_line(vendor_name, product_name or "System", severity, 300, message_dict, fmt)
-
-def gen_firewall(custom_username=None, custom_department=None, user_info=None, src_ip=None, dst_ip=None, action=None, is_blocked=False, fmt='cef', vendor_name=DEFAULT_VENDOR, product_name=None):
-    src_ip = src_ip if src_ip else fake.ipv4_public()
-    dst_ip = dst_ip if dst_ip else fake.ipv4_public()
-    action = action if action else random.choice(["ALLOWED", "DENIED", "DROPPED"])
+def web_server_breach_story(config, sock, csv_writer):
+    """Generates logs for a web server breach scenario."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
     
-    message = "Connection to known bad IP blocked." if is_blocked else "Firewall connection log."
-    severity = 9 if is_blocked else 2
-    
-    message_dict = {
-        'name': 'Firewall Log', 'src_ip': src_ip, 'dst_ip': dst_ip, 'action': action, 'message': message
-    }
-    return format_log_line(vendor_name, product_name or "Firewall", severity, 400, message_dict, fmt)
-
-def gen_router(custom_username=None, custom_department=None, user_info=None, message=None, src_ip=None, fmt='cef', vendor_name=DEFAULT_VENDOR, product_name=None):
-    user = user_info if user_info else gen_user_info(custom_username, custom_department)
-    src_ip = src_ip if src_ip else fake.ipv4_private()
-    message = message if message else "%LINK-3-UPDOWN: Interface FastEthernet0/1, changed state to up"
-    severity = 5
-    
-    message_dict = {
-        'name': 'Router Log', 'username': user['username'], 'message': message, 'src_ip': src_ip
-    }
-    return format_log_line(vendor_name, product_name or "Router", severity, 500, message_dict, fmt)
-
-def gen_switch(state='up', fmt='cef', vendor_name=DEFAULT_VENDOR, product_name=None):
-    """Generates a realistic switch log."""
-    message = f"%SPANTREE-5-EXTENDED_SYSID: Extended SysId enabled for type vlan. Port Fa0/1 changed state to {state}."
-    severity = 4 if state == 'up' else 6
-    message_dict = {'name': 'Switch Port Status', 'message': message}
-    return format_log_line(vendor_name, product_name or "Switch", severity, 600, message_dict, fmt)
-
-def gen_noise_log(fmt, sources, vendor_name, product_name):
-    """Generates a random log from any source for noise."""
-    svc = random.choice(sources)
-    if svc == 'http': return gen_http(fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-    if svc == 'ftp': return gen_ftp(fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-    if svc == 'router': return gen_router(fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-    if svc == 'switch': return gen_switch(fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-    if svc == 'firewall': return gen_firewall(fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-    return gen_event_log(fmt=fmt, vendor_name=vendor_name, product_name=product_name) # Fallback
-
-# --- STORY GENERATORS ---
-def rogue_insider_story(fmt, vendor_name, product_name):
-    insider = {'username': 'insider_joe', 'department': 'Finance'}
-    story_logs = []
-    # 5 Router Logs: Show a user making unauthorized configuration changes.
-    for i in range(5):
-        story_logs.append(gen_router(user_info=insider, message=f"%SYS-5-CONFIG_I: Configured from console by {insider['username']} on vty{i}", fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # 2 Switch Logs: A port goes down and then up, suggesting a rogue device was connected.
-    story_logs.append(gen_switch(state='down', fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    story_logs.append(gen_switch(state='up', fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # 5 Firewall Logs: A known malicious outbound connection indicates data is leaving the network.
-    for _ in range(5):
-        story_logs.append(gen_firewall(src_ip="192.168.1.101", dst_ip=random.choice(KNOWN_BAD_IPS), is_blocked=True, fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # 5 FTP Logs: A RETR action confirms files were downloaded from a server.
-    for _ in range(5):
-        story_logs.append(gen_ftp(user_info=insider, action="RETR", filename=f"confidential_{random.randint(1,100)}.docx", is_exfil=True, fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    return story_logs
-
-def web_server_breach_story(fmt, vendor_name, product_name):
     attacker_ip = fake.ipv4_public()
-    web_server_ip = "10.1.2.30"
-    internal_server_ip = "10.1.2.55"
-    story_logs = []
-    # HTTP Logs: Multiple 404 errors are logged during the reconnaissance phase
-    for path in ["/admin", "/backup", "/config.php.bak"]:
-        story_logs.append(gen_http(src_ip=attacker_ip, path=path, status=404, fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # A successful POST request to an unusual path, indicating a web shell has been uploaded.
-    story_logs.append(gen_http(src_ip=attacker_ip, path="/uploads/shell.php", status=200, fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # Firewall Log: A new inbound connection from the web server's IP to another internal machine is logged
-    story_logs.append(gen_firewall(src_ip=web_server_ip, dst_ip=internal_server_ip, action="ALLOWED", fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    return story_logs
+    web_server_ip = fake.ipv4_private()
 
-def brute_force_data_theft_story(fmt, vendor_name, product_name):
+    send_log(gen_panos_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=attacker_ip, dst_ip=web_server_ip,
+             message='SQL Injection attempt detected against web server')
+             
+    send_log(gen_crowdstrike_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=web_server_ip,
+             message=f'Web server process (w3wp.exe) spawned cmd.exe')
+
+    send_log(gen_mde_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=web_server_ip,
+             message='LSASS memory accessed by suspicious process originating from web server')
+
+    send_log(gen_zscaler_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=web_server_ip, dst_ip=random.choice(KNOWN_BAD_IPS),
+             message='C2 Beaconing detected from web server')
+
+def brute_force_data_theft_story(config, sock, csv_writer):
+    """Generates logs for a brute-force and data theft scenario."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    
     attacker_ip = fake.ipv4_public()
-    compromised_user = {'username': 'data_user', 'department': 'Sales'}
-    story_logs = []
-    # FTP Logs: A high volume of failed LOGIN attempts from a single IP
-    for _ in range(10): # High volume
-        story_logs.append(gen_ftp(user_info=compromised_user, src_ip=attacker_ip, action="LOGIN", status="fail", fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # Followed by one successful LOGIN event.
-    story_logs.append(gen_ftp(user_info=compromised_user, src_ip=attacker_ip, action="LOGIN", status="success", fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # A RETR action confirms data theft.
-    story_logs.append(gen_ftp(user_info=compromised_user, src_ip=attacker_ip, action="RETR", filename="customer_list.csv", is_exfil=True, fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # Firewall Log: An outbound connection to a suspicious external IP is logged
-    story_logs.append(gen_firewall(src_ip=attacker_ip, dst_ip=random.choice(KNOWN_BAD_IPS), action="ALLOWED", fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    # Switch Log: A switch port goes down
-    story_logs.append(gen_switch(state='down', fmt=fmt, vendor_name=vendor_name, product_name=product_name))
-    return story_logs
+    target_user = fake.user_name()
+
+    for _ in range(10): # Simulate multiple failed logins
+        send_log(gen_azure_signin_log, sock, csv_writer, dest_ip, dest_port,
+                 username=target_user, src_ip=attacker_ip,
+                 name='UserLoginFailed', message='Failed user sign-in attempt')
+
+    send_log(gen_azure_signin_log, sock, csv_writer, dest_ip, dest_port,
+             username=target_user, src_ip=attacker_ip,
+             message='Successful user sign-in')
+
+    send_log(gen_m365_email_log, sock, csv_writer, dest_ip, dest_port,
+             username=target_user,
+             message='Email forwarding rule created to external address')
+
+    send_log(gen_gcp_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=target_user, src_ip=attacker_ip,
+             message='storage.buckets.update IAM policy changed to public')
+
+def aws_compromise_story(config, sock, csv_writer):
+    """Generates logs for an AWS compromise scenario."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    attacker_ip = fake.ipv4_public()
+    compromised_user = fake.user_name()
+
+    send_log(gen_aws_cloudtrail_log, sock, csv_writer, dest_ip, dest_port,
+             username=compromised_user, src_ip=attacker_ip,
+             message=f'Successful AWS Console login for user {compromised_user} from unusual IP')
+
+    send_log(gen_aws_cloudtrail_log, sock, csv_writer, dest_ip, dest_port,
+             username=compromised_user, src_ip=attacker_ip, name='CreateUser',
+             message='New IAM user "backdoor_user" created')
+
+    send_log(gen_aws_cloudtrail_log, sock, csv_writer, dest_ip, dest_port,
+             username=compromised_user, src_ip=attacker_ip, name='AttachUserPolicy',
+             message='AdministratorAccess policy attached to user "backdoor_user"')
+
+    send_log(gen_aws_vpc_flow_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=fake.ipv4_private(), dst_ip=random.choice(KNOWN_BAD_IPS),
+             message='Large volume of data egress observed from internal instance to known malicious IP')
+
+def gcp_compromise_story(config, sock, csv_writer):
+    """Generates logs for a GCP compromise scenario."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    attacker_ip = fake.ipv4_public()
+    compromised_sa = f"compromised-sa@{fake.word()}.iam.gserviceaccount.com"
+
+    send_log(gen_gcp_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=attacker_ip, name='v1.iam.serviceAccounts.keys.create',
+             message=f'New service account key created for {compromised_sa}')
+
+    send_log(gen_gcp_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=compromised_sa, src_ip=attacker_ip, name='v1.storage.buckets.update',
+             message='IAM policy on sensitive-data-bucket changed to public')
+
+    send_log(gen_gcp_flow_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=fake.ipv4_private(), dst_ip=attacker_ip,
+             message='Anomalous data transfer from internal GCS bucket to external IP')
+
+def azure_compromise_story(config, sock, csv_writer):
+    """Generates logs for an Azure compromise scenario."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    attacker_ip = fake.ipv4_public()
+    target_user = fake.user_name()
+
+    send_log(gen_azure_signin_log, sock, csv_writer, dest_ip, dest_port,
+             username=target_user, src_ip=attacker_ip,
+             message='Successful sign-in from unfamiliar location')
+
+    send_log(gen_azure_ad_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=target_user, name='Add owner to application',
+             message='Owner added to a high-privilege enterprise application')
+
+    send_log(gen_azure_audit_log, sock, csv_writer, dest_ip, dest_port,
+             username=target_user, src_ip=attacker_ip, name='Microsoft.Storage/storageAccounts/listkeys/action',
+             message='Storage account keys listed for production_data_storage')
+
+    send_log(gen_azure_flow_log, sock, csv_writer, dest_ip, dest_port,
+             src_ip=fake.ipv4_private(), dst_ip=random.choice(KNOWN_BAD_IPS),
+             message='High-volume data egress from Azure storage to known malicious IP')
+
+# --- MITRE ATT&CK Tactic Stories ---
+def reconnaissance_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_panos_log, sock, csv_writer, dest_ip, dest_port, src_ip=fake.ipv4_public(), dst_ip=fake.ipv4_public(), message='Network port scan detected from external source')
+
+def resource_development_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_gcp_audit_log, sock, csv_writer, dest_ip, dest_port, username='suspicious_user', message='New VM instance created with public IP')
+
+def initial_access_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_proofpoint_log, sock, csv_writer, dest_ip, dest_port, message=f'User clicked a malicious link in a phishing email to {random.choice(KNOWN_BAD_URLS)}')
+
+def execution_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_crowdstrike_log, sock, csv_writer, dest_ip, dest_port, message='powershell.exe executed with encoded command')
+
+def persistence_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_azure_ad_audit_log, sock, csv_writer, dest_ip, dest_port, message='New user account created and added to Global Administrators')
+
+def privilege_escalation_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_okta_audit_log, sock, csv_writer, dest_ip, dest_port, message='User privilege escalated to Super Admin')
+
+def defense_evasion_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_windows_event_collector_log, sock, csv_writer, dest_ip, dest_port, name='System Event Log Cleared', message='The system event log was cleared by an administrator')
+
+def credential_access_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_mde_log, sock, csv_writer, dest_ip, dest_port)
+
+def discovery_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_windows_event_collector_log, sock, csv_writer, dest_ip, dest_port, name='Network Discovery Command', message='Command executed: netstat -an')
+
+def lateral_movement_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_azure_signin_log, sock, csv_writer, dest_ip, dest_port, src_ip=fake.ipv4_private(), message='Successful remote login to another host on the network')
+
+def collection_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_dropbox_log, sock, csv_writer, dest_ip, dest_port, message='Large number of files downloaded from multiple folders')
+
+def command_and_control_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_zscaler_log, sock, csv_writer, dest_ip, dest_port)
+
+def exfiltration_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_m365_email_log, sock, csv_writer, dest_ip, dest_port, message='Email sent to external domain with large encrypted attachment')
+
+def impact_story(config, sock, csv_writer):
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    send_log(gen_sentinelone_log, sock, csv_writer, dest_ip, dest_port)
+
+# --- NOISE GENERATION ---
+def add_story_noise(config, sock, csv_writer):
+    """Adds random, unrelated logs to a story."""
+    dest_ip = config.get('dest_ip', '127.0.0.1')
+    dest_port = int(config.get('dest_port', 514))
+    
+    noise_generators = [
+        gen_azure_flow_log, gen_gcp_flow_log, gen_duo_log, gen_okta_sso_log,
+        gen_panos_log, gen_google_workspace_auth_log, gen_windows_event_collector_log
+    ]
+    
+    for _ in range(random.randint(50, 100)):
+        if session_state['stop_event'].is_set(): break
+        log_function = random.choice(noise_generators)
+        send_log(log_function, sock, csv_writer, dest_ip, dest_port, is_noise=True)
+
 
 # --- SESSION MANAGEMENT ---
 def generate_logs_session(config):
-    """Main thread function to start either a random or story session."""
     send_mode = config.get('send_mode', 'random')
-    
-    # Initialize common variables
     dest_ip = config.get('dest_ip', '127.0.0.1')
     dest_port = int(config.get('dest_port', 514))
     fmt = config.get('log_format', 'cef')
-    if send_mode == 'story':
-        fmt = 'cef'
+    if send_mode == 'story': fmt = 'cef'
     save_file = config.get('save_file', False)
-    vendor_name = config.get('vendor') or DEFAULT_VENDOR
-    product_name = config.get('product_name')
     
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    fhandle = None
-    csv_writer = None
-
+    fhandle, csv_writer = None, None
     if save_file:
         os.makedirs(LOG_DIR, exist_ok=True)
         filename = f"syslog_{datetime.now().strftime('%Y%m%d_%H%M%S')}.{fmt}.csv"
         file_path = os.path.join(LOG_DIR, filename)
         fhandle = open(file_path, 'w', newline='', encoding='utf-8')
-        # Define comprehensive fieldnames
-        fieldnames = ['timestamp', 'vendor', 'product', 'severity', 'event_id', 'name', 'username', 'department', 'src_ip', 'dst_ip', 'request', 'status', 'action', 'message', 'filename', 'log_line']
+        fieldnames = ['timestamp', 'vendor', 'product', 'severity', 'event_id', 'name', 'username', 'src_ip', 'dst_ip', 'message', 'log_line']
         csv_writer = csv.DictWriter(fhandle, fieldnames=fieldnames, extrasaction='ignore')
         csv_writer.writeheader()
 
@@ -691,45 +1035,49 @@ def generate_logs_session(config):
             run_randomization_session(config, sock, csv_writer)
         elif send_mode == 'story':
             run_story_session(config, sock, csv_writer)
+        
+        with session_lock:
+             if not session_state['stop_event'].is_set():
+                session_state['logs_queue'].append(f'data: {json.dumps({"status": "Session completed.", "type": "success", "is_running": False, "is_paused": False})}\n\n')
+
     except Exception as e:
         print(f"Error in generator thread: {e}")
         with session_lock:
-            error_msg = json.dumps({"status": f"Error: {e}", "type": "danger"})
-            session_state['logs_queue'].append(f'data: {error_msg}\n\n')
+            error_message = f"Error in generator: {e}"
+            session_state['logs_queue'].append(f'data: {json.dumps({"status": error_message, "type": "danger", "is_running": False, "is_paused": False})}\n\n')
     finally:
         sock.close()
-        if fhandle:
-            fhandle.close()
-            with session_lock:
-                saved_msg = json.dumps({"status": "Logs saved to CSV file.", "type": "info"})
-                session_state['logs_queue'].append(f'data: {saved_msg}\n\n')
+        if fhandle: fhandle.close()
         with session_lock:
             session_state['is_running'] = False
             session_state['is_paused'] = False
             session_state['thread'] = None
-            stopped_msg = json.dumps({
-                "status": "Session stopped.", "type": "danger",
-                "is_running": False, "is_paused": False
-            })
-            session_state['logs_queue'].append(f'data: {stopped_msg}\n\n')
 
 def run_randomization_session(config, sock, csv_writer):
     duration_minutes = int(config.get('duration_minutes', 1))
     messages_per_second = int(config.get('messages_per_second', 10))
-    selected_sources = config.get('sources', [])
-    custom_username = config.get('custom_username', '')
-    custom_department = config.get('custom_department', '')
-    vendor_name = config.get('vendor') or DEFAULT_VENDOR
-    product_name = config.get('product_name')
     fmt = config.get('log_format', 'cef')
     dest_ip = config.get('dest_ip', '127.0.0.1')
     dest_port = int(config.get('dest_port', 514))
+    
+    is_custom_mode = 'custom_vendor' in config and config.get('custom_vendor') and 'custom_product' in config and config.get('custom_product')
 
-    if not selected_sources:
-        with session_lock:
-            error_msg = json.dumps({"status": "Error: No sources selected in Randomization mode.", "type": "danger"})
-            session_state['logs_queue'].append(f'data: {error_msg}\n\n')
-        return
+    log_generators = {
+        "AWS-CloudTrail": gen_aws_cloudtrail_log, "AWS-VPC Flow Logs": gen_aws_vpc_flow_log,
+        "Azure-Audit Logs": gen_azure_audit_log, "Azure-Flow Logs": gen_azure_flow_log, "Azure-Signin Log": gen_azure_signin_log,
+        "Azure-AD Audit Logs": gen_azure_ad_audit_log, "GCP-Audit Logs": gen_gcp_audit_log, "GCP-Flow Logs": gen_gcp_flow_log,
+        "Kubernetes-Audit Logs": gen_kubernetes_audit_log, "Okta-SSO": gen_okta_sso_log, "Okta-Audit": gen_okta_audit_log,
+        "Duo-Authentication": gen_duo_log, "PingOne-SSO": gen_pingone_log, "OneLogin-Events": gen_onelogin_log,
+        "Google Workspace-Audit": gen_google_workspace_audit_log, "Google Workspace-Authentication": gen_google_workspace_auth_log,
+        "Microsoft 365-Email Logs": gen_m365_email_log, "Palo Alto Networks-PAN-OS": gen_panos_log, "Cisco-ASA": gen_cisco_asa_log,
+        "Zscaler-Web Proxy": gen_zscaler_log, "Proofpoint-Email Security": gen_proofpoint_log,
+        "Microsoft-Defender for Endpoint": gen_mde_log, "CrowdStrike-Falcon": gen_crowdstrike_log,
+        "SentinelOne-EDR": gen_sentinelone_log, "Dropbox-Events": gen_dropbox_log, "Windows-Event Collector": gen_windows_event_collector_log
+    }
+    
+    if not is_custom_mode:
+        selected_products = config.get('products', [])
+        if not selected_products: return
 
     end_time = time.time() + (duration_minutes * 60)
     sleep_interval = 1.0 / messages_per_second
@@ -739,72 +1087,63 @@ def run_randomization_session(config, sock, csv_writer):
             time.sleep(0.5)
             continue
 
-        svc = random.choice(selected_sources)
-        log_dict = {}
-        if svc == 'http': log_dict = gen_http(custom_username=custom_username, custom_department=custom_department, fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-        elif svc == 'ftp': log_dict = gen_ftp(custom_username=custom_username, custom_department=custom_department, fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-        elif svc == 'router': log_dict = gen_router(custom_username=custom_username, custom_department=custom_department, fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-        elif svc == 'switch': log_dict = gen_switch(state=random.choice(['up', 'down']), fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-        elif svc == 'firewall': log_dict = gen_firewall(fmt=fmt, vendor_name=vendor_name, product_name=product_name)
-        
-        if log_dict:
-            log_line = log_dict['log_line']
-            sock.sendto(log_line.encode('utf-8'), (dest_ip, dest_port))
-            if csv_writer:
-                csv_writer.writerow(log_dict)
-            with session_lock:
-                log_json = json.dumps({"log": log_line})
-                session_state['logs_queue'].append(f'data: {log_json}\n\n')
+        if is_custom_mode:
+            send_log(gen_custom_log, sock, csv_writer, dest_ip, dest_port, fmt=fmt, 
+                     custom_vendor=config['custom_vendor'], 
+                     custom_product=config['custom_product'])
+        else:
+            product_to_gen = random.choice(selected_products)
+            log_function = log_generators.get(product_to_gen)
+            if log_function:
+                send_log(log_function, sock, csv_writer, dest_ip, dest_port, fmt=fmt)
         
         time.sleep(sleep_interval)
 
+
 def run_story_session(config, sock, csv_writer):
-    story_type = config.get('story_type', 'rogue_insider_story')
-    add_noise = config.get('add_noise', False)
-    vendor_name = config.get('vendor') or DEFAULT_VENDOR
-    product_name = config.get('product_name')
-    fmt = 'cef' # Story mode always uses CEF
-    dest_ip = config.get('dest_ip', '127.0.0.1')
-    dest_port = int(config.get('dest_port', 514))
+    story_type = config.get('story_type')
+    add_noise = config.get('add_noise')
     
-    story_map = {
-        "rogue_insider_story": rogue_insider_story,
-        "web_server_breach_story": web_server_breach_story,
-        "brute_force_data_theft_story": brute_force_data_theft_story
+    story_functions = {
+        'rogue_insider_story': rogue_insider_story,
+        'web_server_breach_story': web_server_breach_story,
+        'brute_force_data_theft_story': brute_force_data_theft_story,
+        'aws_compromise_story': aws_compromise_story,
+        'gcp_compromise_story': gcp_compromise_story,
+        'azure_compromise_story': azure_compromise_story,
+        'reconnaissance_story': reconnaissance_story,
+        'resource_development_story': resource_development_story,
+        'initial_access_story': initial_access_story,
+        'execution_story': execution_story,
+        'persistence_story': persistence_story,
+        'privilege_escalation_story': privilege_escalation_story,
+        'defense_evasion_story': defense_evasion_story,
+        'credential_access_story': credential_access_story,
+        'discovery_story': discovery_story,
+        'lateral_movement_story': lateral_movement_story,
+        'collection_story': collection_story,
+        'command_and_control_story': command_and_control_story,
+        'exfiltration_story': exfiltration_story,
+        'impact_story': impact_story,
     }
-    story_function = story_map.get(story_type)
-    if not story_function: return
 
-    story_logs = story_function(fmt, vendor_name, product_name)
-    all_logs_to_send = story_logs
-    if add_noise:
-        num_noise_logs = 83
-        noise_logs = [gen_noise_log(fmt, SOURCES, vendor_name, product_name) for _ in range(num_noise_logs)]
-        all_logs_to_send.extend(noise_logs)
-        random.shuffle(all_logs_to_send)
-    
-    for log_entry in all_logs_to_send:
-        if session_state['stop_event'].is_set(): break
-        while session_state['pause_event'].is_set():
-            time.sleep(0.5)
-            if session_state['stop_event'].is_set(): break
-        if session_state['stop_event'].is_set(): break
+    story_func = story_functions.get(story_type)
+    if story_func:
+        if add_noise:
+            noise_thread = threading.Thread(target=add_story_noise, args=(config, sock, csv_writer))
+            noise_thread.daemon = True
+            noise_thread.start()
+        
+        story_func(config, sock, csv_writer)
 
-        log_line = log_entry['log_line']
-        sock.sendto(log_line.encode('utf-8'), (dest_ip, dest_port))
-        if csv_writer:
-            csv_writer.writerow(log_entry)
+        if add_noise:
+            noise_thread.join()
+    else:
+        message = f"Story '{story_type}' is not yet implemented. Stopping session."
         with session_lock:
-            log_json = json.dumps({"log": log_line})
-            session_state['logs_queue'].append(f'data: {log_json}\n\n')
-        time.sleep(0.5) # Fixed delay for story events
+            session_state['logs_queue'].append(f'data: {json.dumps({"status": message, "type": "warning", "is_running": False, "is_paused": False})}\n\n')
+        time.sleep(1)
 
-    with session_lock:
-        final_msg = json.dumps({
-            "status": f"Story '{story_type}' has completed. Total events: {len(all_logs_to_send)}",
-            "type": "success", "is_running": False, "is_paused": False
-        })
-        session_state['logs_queue'].append(f'data: {final_msg}\n\n')
 
 # --- FLASK ROUTES ---
 @app.route('/')
@@ -818,8 +1157,7 @@ def start_generation():
             return jsonify({'success': False, 'message': 'A session is already running.'})
         
         config = request.json
-        if config.get('send_mode') == 'story':
-            config['log_format'] = 'cef'
+        config['log_format'] = 'cef' # Always default to CEF
 
         session_state['stop_event'].clear()
         session_state['pause_event'].clear()
@@ -861,9 +1199,8 @@ def stop_generation():
             return jsonify({'success': False, 'message': 'No session is running.'})
         
         session_state['stop_event'].set()
-        session_state['pause_event'].clear() # Ensure it unblocks if paused
+        session_state['pause_event'].clear()
         
-    # Wait for the thread to finish
     if session_state['thread']:
         session_state['thread'].join(timeout=2)
         
@@ -893,7 +1230,7 @@ def stream():
         while True:
             with session_lock:
                 if not session_state['is_running'] and last_sent_index >= len(session_state['logs_queue']):
-                    break # End stream if session is over and all logs sent
+                    break
                 
                 queue_len = len(session_state['logs_queue'])
                 if last_sent_index < queue_len:
@@ -905,5 +1242,3 @@ def stream():
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True, host='0.0.0.0', port=5001)
-
-
